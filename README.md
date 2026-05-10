@@ -1,8 +1,8 @@
 # CropAnomalyNet
 
-Unsupervised crop disease detection on PlantVillage maize via reconstruction-based anomaly detection and pretrained-feature methods, with diffusion-based synthetic data augmentation.
+Unsupervised crop disease detection on PlantVillage maize via reconstruction-based anomaly detection and pretrained-feature methods, with an evaluation of diffusion-based synthetic data augmentation.
 
-**Status:** NB1 (autoencoder baseline) and NB2 (PatchCore + brightness ablation) complete. NB3–NB4 in progress.
+**Status:** NB1, NB2, and NB3 complete. NB4 (PlantDoc cross-domain evaluation) in progress.
 
 ## Motivation
 
@@ -10,12 +10,12 @@ Supervised crop disease classifiers require thousands of labeled examples per cl
 
 ## Pipeline
 
-| Notebook | Method                                         | Status  | Test AUROC |
-| -------- | ---------------------------------------------- | ------- | ---------- |
-| NB1      | Convolutional Autoencoder (MSE reconstruction) | Done    | 0.9942     |
-| NB2      | PatchCore (WR50 layer-2+3, mean-aggregated)    | Done    | **0.9995** |
-| NB3      | Stable Diffusion synthetic disease generation  | Planned | —          |
-| NB4      | PatchCore + synthetic augmentation ablation    | Planned | —          |
+| Notebook | Method                                         | Status  | Result                             |
+| -------- | ---------------------------------------------- | ------- | ---------------------------------- |
+| NB1      | Convolutional Autoencoder (MSE reconstruction) | Done    | AUROC 0.9942                       |
+| NB2      | PatchCore (WR50 layer-2+3, mean-aggregated)    | Done    | AUROC **0.9995**                   |
+| NB3      | Stable Diffusion synthesis evaluation          | Done    | **Negative finding** (FID 323–375) |
+| NB4      | PlantDoc cross-domain evaluation               | Planned | —                                  |
 
 ## Dataset
 
@@ -64,7 +64,9 @@ Per-class test AUROC (117 healthy + 2,690 diseased):
 
 3. **Brightness alone is insufficient** (overall 0.7880). Color carries most of the Common Rust signal (0.9175) but is barely above chance for Cercospora and Northern Blight (~0.685). Both learned methods are doing substantial real texture-based detection on the harder classes, not just exploiting a color shortcut.
 
-4. PlantVillage's clean studio backgrounds and uniform lighting likely inflate both methods' AUROC compared to real-field deployment. PlantDoc evaluation (planned) will test which signal generalizes.
+4. **Off-the-shelf Stable Diffusion v1.5 cannot synthesize convincing maize disease imagery** (NB3). Across four pipeline configurations, FID against real disease images ranged 323–375 versus a healthy intra-class baseline of 32 — an order of magnitude off-distribution. Domain adaptation would be required for diffusion-based augmentation to work in this domain.
+
+5. PlantVillage's clean studio backgrounds and uniform lighting likely inflate both methods' AUROC compared to real-field deployment. NB4 will evaluate on PlantDoc field images to test which signal generalizes.
 
 ## NB1 — Convolutional Autoencoder
 
@@ -93,6 +95,40 @@ Artifacts in `results/nb2/`:
 - `brightness_baseline_scores.csv` (mean-RGB-distance baseline for ablation)
 - Coreset memory bank (~447 MB) regenerable from notebook cells 4–7; excluded via `.gitignore`.
 
+## NB3 — Stable Diffusion synthesis evaluation
+
+We tested four configurations of Stable Diffusion v1.5 for generating synthetic maize disease images on PlantVillage healthy bases:
+
+1. img2img with descriptive prompts (strength 0.2–0.6)
+2. ControlNet (Canny edges) standalone
+3. ControlNet + img2img
+4. ControlNet with visual-symptom-only prompts (no disease vocabulary)
+
+All four configurations failed to produce convincing maize disease imagery. Failure modes:
+
+- **Wrong species** at high denoising strength: broadleaf garden plants, autumn fallen leaves, rubber plants with pinnate venation — none are corn.
+- **Misinterpreted disease vocabulary**: "rust" → rusted metal scales / beetle exoskeletons; "pustules" → broccoli florets.
+- **No disease added** at low strength: output essentially preserves the healthy input.
+
+Quantitative results (FID, 50 synthetic vs 200 real per class):
+
+| Comparison                                                    | FID      |
+| ------------------------------------------------------------- | -------- |
+| Healthy maize, half-A vs half-B (intra-distribution baseline) | **32.2** |
+| Synthetic common rust vs real common rust                     | 352.0    |
+| Synthetic Cercospora vs real Cercospora                       | 374.9    |
+| Synthetic Northern Blight vs real Northern Blight             | 323.8    |
+
+Synthetic-vs-real FID is roughly an order of magnitude above the healthy intra-class baseline, confirming the visual evidence: vanilla SD v1.5 cannot produce in-distribution maize disease images via prompt engineering alone. Domain adaptation (LoRA, fine-tuning, or paired-image conditioning like Dreambooth) would be required.
+
+Artifacts in `results/nb3/`:
+
+- Iteration grids: `sd_sanity_check.png`, `sd_strength_sweep.png`, `sd_controlnet_sweep.png`, `sd_controlnet_img2img_sweep.png`, `sd_final_attempt.png`
+- `synthetic_samples.png` (sample of generated outputs)
+- `synthetic_samples/` (15 individual generated images, 5 per class)
+- `fid_results.json`
+- The full set of 150 generated images is regenerable from the notebook in ~15 min.
+
 ## Reproducing
 
 ### NB1
@@ -109,13 +145,22 @@ Artifacts in `results/nb2/`:
 3. Settings → Accelerator → GPU T4 x2 (or P100).
 4. Run all cells. End-to-end runtime ~15 minutes (memory-bank construction ~15 s, coreset selection ~10 min, inference ~3 min, brightness baseline ~15 s).
 
+### NB3
+
+1. Open `notebooks/nb3_stable_diffusion.ipynb` on Kaggle.
+2. Attach the same PlantVillage dataset.
+3. **Settings → Internet → On** (required for downloading SD v1.5 weights from HuggingFace).
+4. Settings → Accelerator → GPU T4 x2 (or P100).
+5. Run all cells. End-to-end runtime ~25 minutes (model download ~3 min, iteration grids ~5 min, bulk generation of 150 images ~13 min, FID computation ~3 min).
+
 ## Repository structure
 
 ```
 cropanomalynet/
 ├── notebooks/
 │   ├── nb1_autoencoder.ipynb
-│   └── nb2_patchcore.ipynb
+│   ├── nb2_patchcore.ipynb
+│   └── nb3_stable_diffusion.ipynb
 ├── results/
 │   ├── nb1/
 │   │   ├── cae_score_histogram.png
@@ -123,12 +168,21 @@ cropanomalynet/
 │   │   ├── cae_reconstructions.png
 │   │   ├── cae_test_scores.csv
 │   │   └── splits.csv
-│   └── nb2/
-│       ├── patchcore_score_histogram.png
-│       ├── patchcore_roc.png
-│       ├── patchcore_anomaly_maps.png
-│       ├── patchcore_test_scores.csv
-│       └── brightness_baseline_scores.csv
+│   ├── nb2/
+│   │   ├── patchcore_score_histogram.png
+│   │   ├── patchcore_roc.png
+│   │   ├── patchcore_anomaly_maps.png
+│   │   ├── patchcore_test_scores.csv
+│   │   └── brightness_baseline_scores.csv
+│   └── nb3/
+│       ├── sd_sanity_check.png
+│       ├── sd_strength_sweep.png
+│       ├── sd_controlnet_sweep.png
+│       ├── sd_controlnet_img2img_sweep.png
+│       ├── sd_final_attempt.png
+│       ├── synthetic_samples.png
+│       ├── synthetic_samples/        # 15 sample images (5/class)
+│       └── fid_results.json
 ├── checkpoints/
 │   └── cae_best.pt          # 4 MB — small enough to commit
 ├── .gitignore
