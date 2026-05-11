@@ -28,4 +28,4 @@ data/raw/
 # Future large checkpoints (use Git LFS if you need them)
 # Comment out the next line to commit large .pt files
 checkpoints/*.pt
-!checkpoints/cae_best.pt   # this one is small (4 MB), keep it
+ 
