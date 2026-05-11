@@ -76,6 +76,10 @@ Per-class cross-domain breakdown:
 | Cercospora           | 0.9953 | 0.9994     | 0.9969 | **1.0000** |
 | Northern Leaf Blight | 0.9877 | 0.9990     | 0.9992 | **1.0000** |
 
+![NB4 score distributions](results/nb4/nb4_score_histograms.png)
+
+_The CAE's PlantDoc distribution (red) has a long tail extending well past its PlantVillage diseased distribution (orange) — evidence that PlantDoc scores are inflated by domain shift. PatchCore's two diseased distributions overlap almost completely, suggesting it detects disease texture consistently across domains._
+
 ## Results — Background sensitivity (NB5)
 
 Same healthy leaf, four backgrounds of increasing domain distance:
@@ -93,6 +97,10 @@ Background sensitivity ratio (Condition 4 / Condition 1):
 | --------- | --------- | --------------------------------------------- |
 | CAE       | **4.00×** | Massive background sensitivity                |
 | PatchCore | **0.97×** | None (slightly _less_ anomalous on field bgs) |
+
+![NB5 controlled experiment](results/nb5/nb5_background_sensitivity.png)
+
+_Same healthy leaf, four backgrounds of increasing domain distance. The CAE's reconstruction error rises 4× while PatchCore's stays flat. Since only the background varies across conditions, this isolates the causal source of NB4's score inflation._
 
 ### Key findings
 
