@@ -1,0 +1,126 @@
+{
+  "bootstrap_auroc_ci_2000_resamples": {
+    "CAE": {
+      "in_domain": [
+        0.9945,
+        0.9897,
+        0.9982
+      ],
+      "cross_domain": [
+        0.9968,
+        0.9931,
+        0.9993
+      ],
+      "unified": [
+        0.9948,
+        0.9904,
+        0.9981
+      ]
+    },
+    "PatchCore": {
+      "in_domain": [
+        0.9995,
+        0.999,
+        0.9998
+      ],
+      "cross_domain": [
+        0.9995,
+        0.9986,
+        1.0
+      ],
+      "unified": [
+        0.9995,
+        0.9991,
+        0.9998
+      ]
+    },
+    "PaDiM": {
+      "in_domain": [
+        0.9811,
+        0.9719,
+        0.989
+      ],
+      "cross_domain": [
+        0.9927,
+        0.987,
+        0.9968
+      ],
+      "unified": [
+        0.9825,
+        0.9742,
+        0.9898
+      ]
+    }
+  },
+  "paired_ttest_cohens_d_nb5": {
+    "CAE": {
+      "solid_gray": 2.43,
+      "pd_non_corn": 1.13,
+      "pd_corn_disease": 1.77
+    },
+    "PatchCore": {
+      "solid_gray": -2.08,
+      "pd_non_corn": -0.33,
+      "pd_corn_disease": -0.77
+    },
+    "PaDiM": {
+      "solid_gray": -0.29,
+      "pd_non_corn": 0.11,
+      "pd_corn_disease": -0.56
+    }
+  },
+  "variance_decomposition_nb5": {
+    "CAE": {
+      "within_std": 0.00155,
+      "across_std": 0.00204,
+      "ratio": 1.32
+    },
+    "PatchCore": {
+      "within_std": 0.09117,
+      "across_std": 0.04207,
+      "ratio": 0.46
+    },
+    "PaDiM": {
+      "within_std": 0.29651,
+      "across_std": 0.11232,
+      "ratio": 0.38
+    }
+  },
+  "background_condition_ratios": {
+    "CAE": {
+      "studio_white": 1.0,
+      "solid_gray": 1.36,
+      "pd_non_corn": 4.23,
+      "pd_corn_disease": 3.66
+    },
+    "PatchCore": {
+      "studio_white": 1.0,
+      "solid_gray": 0.99,
+      "pd_non_corn": 0.98,
+      "pd_corn_disease": 0.97
+    },
+    "PaDiM": {
+      "studio_white": 1.0,
+      "solid_gray": 1.0,
+      "pd_non_corn": 1.01,
+      "pd_corn_disease": 0.97
+    }
+  },
+  "score_magnitude_pv_to_pd": {
+    "CAE": {
+      "common_rust": 1.35,
+      "cercospora": 1.9,
+      "northern_blight": 2.46
+    },
+    "PatchCore": {
+      "common_rust": 1.0,
+      "cercospora": 1.07,
+      "northern_blight": 1.09
+    },
+    "PaDiM": {
+      "common_rust": 0.85,
+      "cercospora": 1.08,
+      "northern_blight": 1.14
+    }
+  }
+}
